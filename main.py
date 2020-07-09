@@ -12,21 +12,27 @@ def download_picture(url, filename):
 
 def get_vk_api_response(api_method, params, requests_method):
     params["access_token"] = os.getenv("VK_ACCESS_TOKEN")
+def get_response(url, params={}):
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    json_data = response.json()
+    if response.status_code != 200:
+        raise requests.exceptions.HTTPError(response.status_code)
+    elif 'error' in json_data:
+        raise requests.exceptions.HTTPError(json_data['error'])
+    else:
+        return response
     params["v"] = "5.120"
     url = f"https://api.vk.com/method/{api_method}/"
 
     if requests_method == "GET":
-        response = requests.get(url, params=params)
-        response.raise_for_status()
+        response = get_response(url, params=params)
     elif requests_method == "POST":
-        response = requests.post(url, params=params)
-        response.raise_for_status()
+        response = get_response(url, params=params)
     
     return response.json()
 
 def get_comic():
-    response = requests.get(url)
-    response.raise_for_status()
 
     picture_url = response.json()["img"]
     picture_comment = response.json()["alt"]
@@ -37,6 +43,7 @@ def get_last_comic_number():
 
     return last_comic_number
     url = f"http://xkcd.com/{random.randrange(0, get_last_comic_number())}/info.0.json"
+    response = get_response(url)
     picture_filename = picture_url.split("/")[-1]
     download_picture(picture_url, picture_filename)
 
@@ -70,9 +77,8 @@ def publish_photo(photos_info, picture_comment):
         "message": picture_comment,
         "attachments": f"photo{photos_info['response'][0]['owner_id']}_{photos_info['response'][0]['id']}"
     }
-    response_json = get_vk_api_response("wall.post", params, "POST")
-
     return response_json
+    json_data = get_vk_api_response("wall.post", params, "POST", vk_access_token)
 
 def main():
     load_dotenv()
