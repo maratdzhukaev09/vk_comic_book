@@ -89,22 +89,33 @@ def publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id):
     }
     json_data = get_vk_api_response("wall.post", params, "POST", vk_access_token)
 
-def main():
-    load_dotenv()
-    picture_comment, picture_filename = get_comic()
     return json_data
 
 
-    photos_info = save_photo(picture_filename, server_url)
-    publish_photo(photos_info, picture_comment)
+def main():
+    try:
+        load_dotenv()
         vk_access_token = os.getenv("VK_ACCESS_TOKEN")
         vk_group_id = os.getenv("VK_GROUP_ID")
+
+        picture_comment, picture_filename = get_comic()
+
+        json_data = get_vk_api_response(
+            "photos.getWallUploadServer",
             {"group_id": vk_group_id},
+            "GET",
             vk_access_token
+        )
+        server_url = json_data["response"]["upload_url"]
+
         photos_info = save_photo(picture_filename, server_url,  vk_access_token, vk_group_id)
         publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id)
+    finally:
+        directory = os.listdir(".")
+        for file in directory:
+            if ".png" in file:
+                os.remove(file)
 
-    os.remove(picture_filename)
 
 if __name__ == "__main__":
     main()
