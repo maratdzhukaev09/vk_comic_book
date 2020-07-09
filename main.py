@@ -36,18 +36,21 @@ def get_vk_api_response(api_method, params, requests_method, vk_access_token):
     
     return response.json()
 
-def get_comic():
 
-    picture_url = response.json()["img"]
-    picture_comment = response.json()["alt"]
 def get_last_comic_number():
     url = f"http://xkcd.com/info.0.json"
     response = get_response(url)
     last_comic_number = response.json()["num"]
 
     return last_comic_number
+
+
+def get_comic():
     url = f"http://xkcd.com/{random.randrange(0, get_last_comic_number())}/info.0.json"
     response = get_response(url)
+    json_data = response.json()
+    picture_url = json_data["img"]
+    picture_comment = json_data["alt"]
     picture_filename = picture_url.split("/")[-1]
     download_picture(picture_url, picture_filename)
 
@@ -61,15 +64,16 @@ def save_photo(picture_filename, server_url, vk_access_token, vk_group_id):
         response = requests.post(url, files=files)
         response.raise_for_status()
 
-    hash = response.json()["hash"]
-    server = response.json()["server"]
-    photo = response.json()["photo"]
+    json_data = response.json()
+    vk_hash = json_data["hash"]
+    vk_server = json_data["server"]
+    vk_photo = json_data["photo"]
     
     params = {
-        "server": server,
-        "group_id": os.getenv('VK_GROUP_ID'),
-        "hash": hash,
-        "photo": photo
+        "server": vk_server,
+        "group_id": vk_group_id,
+        "hash": vk_hash,
+        "photo": vk_photo
     }
     photos_info = get_vk_api_response("photos.saveWallPhoto", params, "POST", vk_access_token)
 
@@ -88,8 +92,8 @@ def publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id):
 def main():
     load_dotenv()
     picture_comment, picture_filename = get_comic()
+    return json_data
 
-    server_url = response_json["response"]["upload_url"]
 
     photos_info = save_photo(picture_filename, server_url)
     publish_photo(photos_info, picture_comment)
