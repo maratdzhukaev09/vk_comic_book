@@ -25,12 +25,18 @@ def get_vk_api_response(api_method, params, requests_method):
     return response.json()
 
 def get_comic():
-    url = f"http://xkcd.com/{random.randrange(0, 2328)}/info.0.json"
     response = requests.get(url)
     response.raise_for_status()
 
     picture_url = response.json()["img"]
     picture_comment = response.json()["alt"]
+def get_last_comic_number():
+    url = f"http://xkcd.com/info.0.json"
+    response = get_response(url)
+    last_comic_number = response.json()["num"]
+
+    return last_comic_number
+    url = f"http://xkcd.com/{random.randrange(0, get_last_comic_number())}/info.0.json"
     picture_filename = picture_url.split("/")[-1]
     download_picture(picture_url, picture_filename)
 
