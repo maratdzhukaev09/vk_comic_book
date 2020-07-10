@@ -118,7 +118,7 @@ def main():
     finally:
         directory = os.listdir(".")
         for file in directory:
-            if ".png" in file:
+            if file.endswith(".png"):
                 os.remove(file)
 
 
