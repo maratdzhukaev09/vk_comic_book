@@ -15,11 +15,12 @@ def download_picture(url, filename):
 def get_response(url, params={}):
     response = requests.get(url, params=params)
     response.raise_for_status()
-    json_data = response.json()
+    response_dict = response.json()
+
     if response.status_code != 200:
         raise requests.exceptions.HTTPError(response.status_code)
-    elif 'error' in json_data:
-        raise requests.exceptions.HTTPError(json_data['error'])
+    elif 'error' in response_dict:
+        raise requests.exceptions.HTTPError(response_dict['error'])
     else:
         return response
 
@@ -48,9 +49,9 @@ def get_last_comic_number():
 def get_comic():
     url = f"http://xkcd.com/{random.randrange(0, get_last_comic_number())}/info.0.json"
     response = get_response(url)
-    json_data = response.json()
-    picture_url = json_data["img"]
-    picture_comment = json_data["alt"]
+    response_dict = response.json()
+    picture_url = response_dict["img"]
+    picture_comment = response_dict["alt"]
     picture_filename = picture_url.split("/")[-1]
     download_picture(picture_url, picture_filename)
 
@@ -64,10 +65,10 @@ def save_photo(picture_filename, server_url, vk_access_token, vk_group_id):
         response = requests.post(url, files=files)
         response.raise_for_status()
 
-    json_data = response.json()
-    vk_hash = json_data["hash"]
-    vk_server = json_data["server"]
-    vk_photo = json_data["photo"]
+    response_dict = response.json()
+    vk_hash = response_dict["hash"]
+    vk_server = response_dict["server"]
+    vk_photo = response_dict["photo"]
     
     params = {
         "server": vk_server,
@@ -87,9 +88,9 @@ def publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id):
         "message": picture_comment,
         "attachments": f"photo{photos_info['response'][0]['owner_id']}_{photos_info['response'][0]['id']}"
     }
-    json_data = get_vk_api_response("wall.post", params, "POST", vk_access_token)
+    response_dict = get_vk_api_response("wall.post", params, "POST", vk_access_token)
 
-    return json_data
+    return response_dict
 
 
 def main():
