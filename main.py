@@ -12,8 +12,12 @@ def download_picture(url, filename):
         file.write(response.content)
 
 
-def get_response(url, params={}):
-    response = requests.get(url, params=params)
+def get_response(url, params={}, requests_method="GET"):
+    if requests_method == "GET":
+        response = requests.get(url, params=params)
+    elif requests_method == "POST":
+        response = requests.post(url, params=params)
+
     response.raise_for_status()
     response_dict = response.json()
 
@@ -31,9 +35,9 @@ def get_vk_api_response(api_method, params, requests_method, vk_access_token):
     url = f"https://api.vk.com/method/{api_method}/"
 
     if requests_method == "GET":
-        response = get_response(url, params=params)
+        response = get_response(url, params)
     elif requests_method == "POST":
-        response = get_response(url, params=params)
+        response = get_response(url, params, "POST")
     
     return response.json()
 
