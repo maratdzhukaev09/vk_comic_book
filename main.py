@@ -53,9 +53,9 @@ def get_last_comic_number():
 def get_comic():
     url = f"http://xkcd.com/{random.randrange(0, get_last_comic_number())}/info.0.json"
     response = get_response(url)
-    response_dict = response.json()
-    picture_url = response_dict["img"]
-    picture_comment = response_dict["alt"]
+    comic_info = response.json()
+    picture_url = comic_info["img"]
+    picture_comment = comic_info["alt"]
     picture_filename = picture_url.split("/")[-1]
     download_picture(picture_url, picture_filename)
 
@@ -69,10 +69,10 @@ def save_photo(picture_filename, server_url, vk_access_token, vk_group_id):
         response = requests.post(url, files=files)
         response.raise_for_status()
 
-    response_dict = response.json()
-    vk_hash = response_dict["hash"]
-    vk_server = response_dict["server"]
-    vk_photo = response_dict["photo"]
+    photo_saving_info = response.json()
+    vk_hash = photo_saving_info["hash"]
+    vk_server = photo_saving_info["server"]
+    vk_photo = photo_saving_info["photo"]
     
     params = {
         "server": vk_server,
@@ -80,21 +80,21 @@ def save_photo(picture_filename, server_url, vk_access_token, vk_group_id):
         "hash": vk_hash,
         "photo": vk_photo
     }
-    photos_info = get_vk_api_response("photos.saveWallPhoto", params, "POST", vk_access_token)
+    photo_info = get_vk_api_response("photos.saveWallPhoto", params, "POST", vk_access_token)
 
-    return photos_info
+    return photo_info
 
 
-def publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id):
+def publish_photo(photo_info, picture_comment, vk_access_token, vk_group_id):
     params = {
         "owner_id": f"-{vk_group_id}",
         "from_group": 1,
         "message": picture_comment,
-        "attachments": f"photo{photos_info['response'][0]['owner_id']}_{photos_info['response'][0]['id']}"
+        "attachments": f"photo{photo_info['response'][0]['owner_id']}_{photo_info['response'][0]['id']}"
     }
-    response_dict = get_vk_api_response("wall.post", params, "POST", vk_access_token)
+    post_info = get_vk_api_response("wall.post", params, "POST", vk_access_token)
 
-    return response_dict
+    return post_info
 
 
 def main():
@@ -105,16 +105,16 @@ def main():
 
         picture_comment, picture_filename = get_comic()
 
-        json_data = get_vk_api_response(
+        server_info = get_vk_api_response(
             "photos.getWallUploadServer",
             {"group_id": vk_group_id},
             "GET",
             vk_access_token
         )
-        server_url = json_data["response"]["upload_url"]
+        server_url = server_info["response"]["upload_url"]
 
-        photos_info = save_photo(picture_filename, server_url,  vk_access_token, vk_group_id)
-        publish_photo(photos_info, picture_comment, vk_access_token, vk_group_id)
+        photo_info = save_photo(picture_filename, server_url,  vk_access_token, vk_group_id)
+        publish_photo(photo_info, picture_comment, vk_access_token, vk_group_id)
     finally:
         directory = os.listdir(".")
         for file in directory:
